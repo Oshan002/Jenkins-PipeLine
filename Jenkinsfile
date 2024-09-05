@@ -48,7 +48,7 @@ pipeline {
 
     post {
         always {
-            mail to: 'your-email@example.com',
+            mail to: 'oshan3929@gmail.com',
                  subject: "Pipeline ${currentBuild.fullDisplayName}",
                  body: "Pipeline completed with status ${currentBuild.currentResult}. Check console output at ${env.BUILD_URL}"
         }
