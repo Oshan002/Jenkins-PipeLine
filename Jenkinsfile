@@ -1,56 +1,83 @@
 pipeline {
     agent any
-
+    environment {
+        // Define environment variables here if necessary
+        STAGING_SERVER = 'staging.example.com'
+        PRODUCTION_SERVER = 'prod.example.com'
+        RECIPIENT_EMAIL = 'your-email@example.com'
+    }
     stages {
         stage('Build') {
             steps {
-                echo 'Building...'
-                // Add a build tool command here like Maven or Gradle, e.g., sh 'mvn clean install'
+                echo 'Building the project...'
+                // Add a real build tool, such as Maven
+                sh 'mvn clean package'
             }
         }
+
         stage('Unit and Integration Tests') {
             steps {
                 echo 'Running Unit and Integration Tests...'
-                // Add a test automation tool command like JUnit, e.g., sh 'mvn test'
+                // Unit testing with a test framework like JUnit
+                sh 'mvn test'
             }
         }
+
         stage('Code Analysis') {
             steps {
-                echo 'Running Code Analysis...'
-                // Integrate code analysis tool like SonarQube, e.g., sh 'sonar-scanner'
+                echo 'Performing Code Analysis...'
+                // Example tool: SonarQube
+                sh 'sonar-scanner'
             }
         }
+
         stage('Security Scan') {
             steps {
                 echo 'Performing Security Scan...'
-                // Add a security scan tool like OWASP Dependency-Check, e.g., sh 'dependency-check.sh'
+                // Example tool: OWASP Dependency Check
+                sh 'dependency-check --project MyProject --scan ./'
             }
         }
+
         stage('Deploy to Staging') {
             steps {
-                echo 'Deploying to Staging...'
-                // Deploy to a staging environment like AWS EC2
+                echo 'Deploying to Staging Environment...'
+                // Deploy to a staging server (you can replace this with real deployment commands)
+                sh 'scp target/myapp.war user@$STAGING_SERVER:/var/www/myapp'
             }
         }
+
         stage('Integration Tests on Staging') {
             steps {
                 echo 'Running Integration Tests on Staging...'
-                // Run tests on the staging environment
+                // Run tests on the staging environment (could be automated using Selenium, etc.)
+                sh 'curl http://$STAGING_SERVER/myapp/healthcheck'
             }
         }
+
         stage('Deploy to Production') {
             steps {
-                echo 'Deploying to Production...'
-                // Deploy to production environment
+                echo 'Deploying to Production Environment...'
+                // Deploy to production server
+                sh 'scp target/myapp.war user@$PRODUCTION_SERVER:/var/www/myapp'
             }
         }
     }
 
     post {
-        always {
-            mail to: 'oshan3929@gmail.com',
-                 subject: "Pipeline ${currentBuild.fullDisplayName}",
-                 body: "Pipeline completed with status ${currentBuild.currentResult}. Check console output at ${env.BUILD_URL}"
+        success {
+            echo 'Pipeline completed successfully.'
+            emailext to: "${oshan3929@gmail.com}",
+                     subject: "Pipeline Success: ${env.JOB_NAME}",
+                     body: "Pipeline ${env.JOB_NAME} has completed successfully on ${env.BUILD_URL}",
+                     attachLog: true
+        }
+        failure {
+            echo 'Pipeline failed.'
+            emailext to: "${oshan3929@gmail.com}",
+                     subject: "Pipeline Failed: ${env.JOB_NAME}",
+                     body: "Pipeline ${env.JOB_NAME} has failed. Please check the logs: ${env.BUILD_URL}",
+                     attachLog: true
         }
     }
 }
